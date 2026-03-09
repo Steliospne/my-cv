@@ -18,6 +18,12 @@ const createItem = () => ({
   details: '',
 })
 
+const autoResizeTextarea = (element: HTMLTextAreaElement | null) => {
+  if (!element) return
+  element.style.height = 'auto'
+  element.style.height = `${element.scrollHeight}px`
+}
+
 export function CvBuilder({ initialCv }: CvBuilderProps) {
   const [cv, setCv] = useState<CvDocument>(initialCv)
   const [saveState, setSaveState] = useState<SaveState>('idle')
@@ -406,7 +412,11 @@ export function CvBuilder({ initialCv }: CvBuilderProps) {
                             <textarea
                               rows={4}
                               className='form-textarea'
+                              ref={autoResizeTextarea}
                               value={item.details}
+                              onInput={(event) =>
+                                autoResizeTextarea(event.currentTarget)
+                              }
                               onChange={(event) =>
                                 updateItem(
                                   section.id,

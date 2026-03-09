@@ -70,14 +70,16 @@ export function CvPreview({ cv }: CvPreviewProps) {
                   )}
                 </div>
                 {splitDetails(item.details).length > 0 && (
-                  <ul className='mt-1 space-y-1 text-sm leading-6 text-(--ink-soft)'>
+                  <ul className='mt-1 space-y-1 overflow-hidden text-sm leading-6 text-(--ink-soft)'>
                     {splitDetails(item.details).map((line) => (
-                      <li key={line} className='flex gap-2'>
+                      <li key={line} className='grid grid-cols-[10px_1fr] items-start gap-2'>
                         <span
                           aria-hidden='true'
                           className='mt-2 h-1.5 w-1.5 rounded-full bg-(--accent)'
                         />
-                        <span>{line}</span>
+                        <span className='min-w-0 break-words whitespace-pre-wrap'>
+                          {line}
+                        </span>
                       </li>
                     ))}
                   </ul>

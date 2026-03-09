@@ -75,7 +75,24 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: "#374151",
     lineHeight: 1.35,
-    marginTop: 3,
+    marginTop: 2,
+  },
+  bulletRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 4,
+    marginTop: 2,
+  },
+  bulletMarker: {
+    width: 8,
+    fontSize: 9,
+    color: "#374151",
+  },
+  bulletText: {
+    flexShrink: 1,
+    fontSize: 9,
+    color: "#374151",
+    lineHeight: 1.35,
   },
 });
 
@@ -125,10 +142,11 @@ export function CvPdfDocument({ cv }: { cv: CvDocument }) {
                   </View>
                   {item.period ? <Text style={styles.period}>{item.period}</Text> : null}
                 </View>
-                {splitDetails(item.details).map((line) => (
-                  <Text key={line} style={styles.bullet}>
-                    - {line}
-                  </Text>
+                {splitDetails(item.details).map((line, index) => (
+                  <View key={`${item.id}-${index}`} style={styles.bulletRow}>
+                    <Text style={styles.bulletMarker}>-</Text>
+                    <Text style={styles.bulletText}>{line}</Text>
+                  </View>
                 ))}
               </View>
             ))}

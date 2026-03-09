@@ -68,7 +68,10 @@ body {
 }
 
 .form-textarea {
+  min-height: 7.2rem;
+  line-height: 1.45;
   resize: vertical;
+  overflow-y: hidden;
 }
 
 .form-input:focus,

@@ -13,7 +13,7 @@ const itemSchema = z.object({
 const sectionSchema = z.object({
   id: z.string(),
   title: z.string(),
-  kind: z.enum(["experience", "education", "skills", "languages"]),
+  kind: z.enum(["experience", "education", "projects", "skills", "languages"]),
   sortOrder: z.number().int().nonnegative(),
   items: z.array(itemSchema),
 });
@@ -102,6 +102,28 @@ export async function PUT(
         },
       });
     }
+  });
+
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+
+  const existingCv = await prisma.cv.findUnique({
+    where: { id },
+    select: { id: true },
+  });
+
+  if (!existingCv) {
+    return NextResponse.json({ message: "CV not found." }, { status: 404 });
+  }
+
+  await prisma.cv.delete({
+    where: { id },
   });
 
   return NextResponse.json({ ok: true });

@@ -85,6 +85,17 @@ const splitDetails = (details: string) =>
     .map((line) => line.trim())
     .filter(Boolean);
 
+const isItemEmpty = (item: { title: string; subtitle: string; period: string; details: string }) =>
+  [item.title, item.subtitle, item.period, item.details].every((field) => field.trim().length === 0);
+
+const shouldRenderSection = (section: CvDocument["sections"][number]) => {
+  if (section.kind !== "projects") {
+    return true;
+  }
+
+  return section.items.some((item) => !isItemEmpty(item));
+};
+
 export function CvPdfDocument({ cv }: { cv: CvDocument }) {
   return (
     <Document title={`${cv.fullName} - CV`} language="en">
@@ -102,7 +113,7 @@ export function CvPdfDocument({ cv }: { cv: CvDocument }) {
           <Text style={styles.paragraph}>{cv.summary}</Text>
         </View>
 
-        {cv.sections.map((section) => (
+        {cv.sections.filter(shouldRenderSection).map((section) => (
           <View style={styles.section} key={section.id}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
             {section.items.map((item) => (

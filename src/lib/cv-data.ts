@@ -55,9 +55,22 @@ const initialSections = (): Array<Omit<CvSection, "id">> => [
     ],
   },
   {
+    title: "Projects",
+    kind: "projects",
+    sortOrder: 2,
+    items: [
+      createItem(
+        "Project Name",
+        "Tech Stack / Your Role",
+        "Timeline",
+        "What you built and why it mattered.\nMeasurable impact, performance gain, or business result.",
+      ),
+    ],
+  },
+  {
     title: "Professional Skills",
     kind: "skills",
-    sortOrder: 2,
+    sortOrder: 3,
     items: [
       createItem(
         "Technical Stack",
@@ -76,7 +89,7 @@ const initialSections = (): Array<Omit<CvSection, "id">> => [
   {
     title: "Languages",
     kind: "languages",
-    sortOrder: 3,
+    sortOrder: 4,
     items: [
       createItem("Greek", "Native", "", ""),
       createItem("English", "Proficient", "", ""),
@@ -108,8 +121,92 @@ const parseSectionItems = (value: unknown): CvItem[] => {
     .filter((item): item is CvItem => item !== null);
 };
 
+const toCvDocument = (cv: {
+  id: string;
+  fullName: string;
+  headline: string;
+  email: string;
+  phone: string;
+  location: string;
+  summary: string;
+  sections: Array<{
+    id: string;
+    title: string;
+    kind: string;
+    sortOrder: number;
+    items: unknown;
+  }>;
+}): CvDocument => ({
+  id: cv.id,
+  fullName: cv.fullName,
+  headline: cv.headline,
+  email: cv.email,
+  phone: cv.phone,
+  location: cv.location,
+  summary: cv.summary,
+  sections: cv.sections.map((section) => ({
+    id: section.id,
+    title: section.title,
+    kind: section.kind as CvSection["kind"],
+    sortOrder: section.sortOrder,
+    items: parseSectionItems(section.items),
+  })),
+});
+
+const ensureProjectsSection = async (cvId: string) => {
+  const sections = await prisma.cvSection.findMany({
+    where: { cvId },
+    orderBy: { sortOrder: "asc" },
+    select: {
+      id: true,
+      kind: true,
+      sortOrder: true,
+    },
+  });
+
+  const hasProjects = sections.some((section) => section.kind === "projects");
+  if (hasProjects) {
+    return;
+  }
+
+  const skillsSection = sections.find((section) => section.kind === "skills");
+  const insertOrder = skillsSection ? skillsSection.sortOrder : sections.length;
+
+  await prisma.$transaction([
+    prisma.cvSection.updateMany({
+      where: {
+        cvId,
+        sortOrder: {
+          gte: insertOrder,
+        },
+      },
+      data: {
+        sortOrder: {
+          increment: 1,
+        },
+      },
+    }),
+    prisma.cvSection.create({
+      data: {
+        cvId,
+        title: "Projects",
+        kind: "projects",
+        sortOrder: insertOrder,
+        items: [
+          createItem(
+            "Project Name",
+            "Tech Stack / Your Role",
+            "Timeline",
+            "What you built and why it mattered.\nMeasurable impact, performance gain, or business result.",
+          ),
+        ],
+      },
+    }),
+  ]);
+};
+
 export const serializeCv = async (cvId: string): Promise<CvDocument | null> => {
-  const cv = await prisma.cv.findUnique({
+  let cv = await prisma.cv.findUnique({
     where: { id: cvId },
     include: {
       sections: {
@@ -124,22 +221,24 @@ export const serializeCv = async (cvId: string): Promise<CvDocument | null> => {
     return null;
   }
 
-  return {
-    id: cv.id,
-    fullName: cv.fullName,
-    headline: cv.headline,
-    email: cv.email,
-    phone: cv.phone,
-    location: cv.location,
-    summary: cv.summary,
-    sections: cv.sections.map((section) => ({
-      id: section.id,
-      title: section.title,
-      kind: section.kind as CvSection["kind"],
-      sortOrder: section.sortOrder,
-      items: parseSectionItems(section.items),
-    })),
-  };
+  if (!cv.sections.some((section) => section.kind === "projects")) {
+    await ensureProjectsSection(cv.id);
+    cv = await prisma.cv.findUnique({
+      where: { id: cvId },
+      include: {
+        sections: {
+          orderBy: {
+            sortOrder: "asc",
+          },
+        },
+      },
+    });
+    if (!cv) {
+      return null;
+    }
+  }
+
+  return toCvDocument(cv);
 };
 
 export const createCv = async (): Promise<CvDocument> => {
@@ -169,22 +268,7 @@ export const createCv = async (): Promise<CvDocument> => {
     },
   });
 
-  return {
-    id: created.id,
-    fullName: created.fullName,
-    headline: created.headline,
-    email: created.email,
-    phone: created.phone,
-    location: created.location,
-    summary: created.summary,
-    sections: created.sections.map((section) => ({
-      id: section.id,
-      title: section.title,
-      kind: section.kind as CvSection["kind"],
-      sortOrder: section.sortOrder,
-      items: parseSectionItems(section.items),
-    })),
-  };
+  return toCvDocument(created);
 };
 
 export const listCvs = async (): Promise<CvListItem[]> => {
@@ -218,22 +302,10 @@ export const ensureCv = async (): Promise<CvDocument> => {
   });
 
   if (existing) {
-    return {
-      id: existing.id,
-      fullName: existing.fullName,
-      headline: existing.headline,
-      email: existing.email,
-      phone: existing.phone,
-      location: existing.location,
-      summary: existing.summary,
-      sections: existing.sections.map((section) => ({
-        id: section.id,
-        title: section.title,
-        kind: section.kind as CvSection["kind"],
-        sortOrder: section.sortOrder,
-        items: parseSectionItems(section.items),
-      })),
-    };
+    const serialized = await serializeCv(existing.id);
+    if (serialized) {
+      return serialized;
+    }
   }
 
   return createCv();

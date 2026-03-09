@@ -1,4 +1,4 @@
-export type SectionKind = "experience" | "education" | "skills" | "languages";
+export type SectionKind = "experience" | "education" | "projects" | "skills" | "languages";
 
 export type CvItem = {
   id: string;

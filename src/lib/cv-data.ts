@@ -98,6 +98,25 @@ const initialSections = (): Array<Omit<CvSection, "id">> => [
   },
 ];
 
+export type CvImportPayload = {
+  fullName: string;
+  headline: string;
+  email: string;
+  phone: string;
+  location: string;
+  summary: string;
+  sections: Array<{
+    title: string;
+    kind: CvSection["kind"];
+    items: Array<{
+      title: string;
+      subtitle: string;
+      period: string;
+      details: string;
+    }>;
+  }>;
+};
+
 const parseSectionItems = (value: unknown): CvItem[] => {
   if (!Array.isArray(value)) {
     return [];
@@ -256,6 +275,44 @@ export const createCv = async (): Promise<CvDocument> => {
           kind: section.kind,
           sortOrder: section.sortOrder,
           items: section.items,
+        })),
+      },
+    },
+    include: {
+      sections: {
+        orderBy: {
+          sortOrder: "asc",
+        },
+      },
+    },
+  });
+
+  return toCvDocument(created);
+};
+
+export const createCvFromImport = async (
+  payload: CvImportPayload,
+): Promise<CvDocument> => {
+  const created = await prisma.cv.create({
+    data: {
+      fullName: payload.fullName.trim(),
+      headline: payload.headline.trim(),
+      email: payload.email.trim(),
+      phone: payload.phone.trim(),
+      location: payload.location.trim(),
+      summary: payload.summary.trim(),
+      sections: {
+        create: payload.sections.map((section, index) => ({
+          title: section.title.trim(),
+          kind: section.kind,
+          sortOrder: index,
+          items: section.items.map((item) => ({
+            id: randomUUID(),
+            title: item.title.trim(),
+            subtitle: item.subtitle.trim(),
+            period: item.period.trim(),
+            details: item.details.trim(),
+          })),
         })),
       },
     },

@@ -131,7 +131,7 @@ export function CvPdfDocument({ cv }: { cv: CvDocument }) {
         </View>
 
         {cv.sections.filter(shouldRenderSection).map((section) => (
-          <View style={styles.section} key={section.id}>
+          <View style={styles.section} key={section.id} wrap={false}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
             {section.items.map((item) => (
               <View key={item.id} style={styles.entry}>

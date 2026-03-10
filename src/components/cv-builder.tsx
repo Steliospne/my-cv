@@ -3,6 +3,8 @@
 import { useMemo, useState, useTransition } from 'react'
 import type { CvDocument } from '@/lib/cv-types'
 import { CvPreview } from '@/components/cv-preview'
+import { formatFilename } from '@/lib/utils/format-filename'
+import { generateRandomString } from '@/lib/utils/generate-random-string'
 
 type CvBuilderProps = {
   initialCv: CvDocument
@@ -189,7 +191,12 @@ export function CvBuilder({ initialCv }: CvBuilderProps) {
       const blob = await response.blob()
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
-      const filename = `${cv.fullName.toLowerCase().replaceAll(' ', '-') || 'cv'}.pdf`
+      const cvFullname = formatFilename(cv.fullName, 'cv')
+      const cvHeadline = formatFilename(
+        cv.headline,
+        generateRandomString({ length: 8, mode: 'numeric' }),
+      )
+      const filename = `${cvFullname}-${cvHeadline}.pdf`
 
       link.href = url
       link.download = filename

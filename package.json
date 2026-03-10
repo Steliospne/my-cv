@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
+    "ci": "pnpm prisma:generate && pnpm build",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:reset": "prisma migrate reset"

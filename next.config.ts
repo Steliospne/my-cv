@@ -1,8 +1,9 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  serverExternalPackages: ["@react-pdf/renderer"],
-};
+  cacheComponents: true,
+  serverExternalPackages: ['@react-pdf/renderer'],
+}
 
-export default nextConfig;
+export default nextConfig

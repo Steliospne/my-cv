@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, type ChangeEvent } from 'react'
 import type { CvListItem } from '@/lib/cv-types'
 import { createCv } from '@/lib/cv-actions'
+import { Spinner } from '@/components/ui/spinner'
 
 type CvDashboardProps = {
   cvs: CvListItem[]
@@ -136,9 +137,10 @@ export function CvDashboard({ cvs }: CvDashboardProps) {
         <form action={createCvAction}>
           <button
             type='submit'
-            className='rounded-full uppercase tracking-[0.12em] bg-(--accent) text-white px-4 py-2 text-xs font-semibold hover:bg-(--accent)/90'
+            disabled={isCreating}
+            className='rounded-full uppercase tracking-[0.12em] bg-(--accent) text-white px-4 py-2 text-xs font-semibold hover:bg-(--accent)/90 disabled:opacity-50'
           >
-            Create New CV
+            {isCreating ? <Spinner /> : 'Create New CV'}
           </button>
         </form>
         <button
@@ -201,32 +203,35 @@ export function CvDashboard({ cvs }: CvDashboardProps) {
             key={cv.id}
             className='rounded-3xl border border-(--line) bg-(--panel) p-5 shadow-(--card-shadow) transition hover:-translate-y-0.5 hover:border-(--accent)'
           >
-            <p className='text-xs uppercase tracking-[0.14em] text-(--muted)'>
-              Saved CV
-            </p>
-            <h2 className='mt-1 font-heading text-2xl text-(--ink)'>
-              {cv.fullName}
-            </h2>
-            <p className='mt-1 text-sm text-(--muted-strong)'>{cv.headline}</p>
-            <p className='mt-4 text-xs uppercase tracking-[0.11em] text-(--muted)'>
-              Last updated {new Date(cv.updatedAt).toLocaleString()}
-            </p>
-            <div className='mt-4 flex items-center gap-2'>
-              <Link
-                href={`/cv/${cv.id}`}
-                className='rounded-full border border-(--line) px-4 py-2 text-xs font-semibold uppercase tracking-[0.11em] text-(--muted-strong) transition hover:border-(--accent) hover:text-(--ink)'
-              >
-                Edit
-              </Link>
-              <button
-                type='button'
-                onClick={() => deleteCv(cv.id, cv.fullName)}
-                disabled={deletingId === cv.id}
-                className='rounded-full border border-rose-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.11em] text-rose-700 transition hover:bg-rose-50 disabled:opacity-50'
-              >
-                {deletingId === cv.id ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
+            <Link href={`/cv/${cv.id}`}>
+              <p className='text-xs uppercase tracking-[0.14em] text-(--muted)'>
+                Saved CV
+              </p>
+              <h2 className='mt-1 font-heading text-2xl text-(--ink)'>
+                {cv.fullName}
+              </h2>
+              <p className='mt-1 text-sm text-(--muted-strong)'>
+                {cv.headline}
+              </p>
+              <p className='mt-4 text-xs uppercase tracking-[0.11em] text-(--muted)'>
+                Last updated {new Date(cv.updatedAt).toLocaleString()}
+              </p>
+              <div className='mt-4 flex items-center gap-2'>
+                {/* Edit */}
+
+                <button
+                  type='button'
+                  onClick={(event) => {
+                    event.preventDefault()
+                    deleteCv(cv.id, cv.fullName)
+                  }}
+                  disabled={deletingId === cv.id}
+                  className='rounded-full border border-rose-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.11em] text-rose-700 transition hover:bg-rose-50 disabled:opacity-50'
+                >
+                  {deletingId === cv.id ? <Spinner /> : 'Delete'}
+                </button>
+              </div>
+            </Link>
           </article>
         ))}
       </section>

@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import type { CvDocument, CvItem, CvListItem, CvSection } from '@/lib/cv-types'
 import type { CvImportPayload } from '@/lib/cv-data'
+import { cacheTag, updateTag } from 'next/cache'
 
 const createItem = (
   title: string,
@@ -271,6 +272,7 @@ export async function createCv(): Promise<CvDocument> {
     },
   })
 
+  updateTag('cvs')
   return toCvDocument(created)
 }
 
@@ -309,10 +311,13 @@ export async function createCvFromImport(
     },
   })
 
+  updateTag('cvs')
   return toCvDocument(created)
 }
 
 export async function listCvs(): Promise<CvListItem[]> {
+  'use cache'
+  cacheTag('cvs')
   const cvs = await prisma.cv.findMany({
     orderBy: {
       updatedAt: 'desc',

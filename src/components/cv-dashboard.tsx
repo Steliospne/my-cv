@@ -31,7 +31,10 @@ export function CvDashboard({ cvs }: CvDashboardProps) {
 
     try {
       setDeletingId(cvId)
-      const response = await fetch(`/api/cv/${cvId}`, { method: 'DELETE' })
+      const response = await fetch(`/api/cv/${cvId}`, {
+        method: 'DELETE',
+        next: { tags: ['cvs'] },
+      })
       if (!response.ok) {
         throw new Error('Delete failed')
       }
@@ -52,6 +55,7 @@ export function CvDashboard({ cvs }: CvDashboardProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
+        next: { tags: ['cvs'] },
       })
 
       const data = (await response.json().catch(() => null)) as {

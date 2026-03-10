@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
+import { prisma } from '@/lib/prisma'
+import { revalidateTag } from 'next/cache'
 
 const itemSchema = z.object({
   id: z.string(),
@@ -8,15 +9,15 @@ const itemSchema = z.object({
   subtitle: z.string(),
   period: z.string(),
   details: z.string(),
-});
+})
 
 const sectionSchema = z.object({
   id: z.string(),
   title: z.string(),
-  kind: z.enum(["experience", "education", "projects", "skills", "languages"]),
+  kind: z.enum(['experience', 'education', 'projects', 'skills', 'languages']),
   sortOrder: z.number().int().nonnegative(),
   items: z.array(itemSchema),
-});
+})
 
 const cvSchema = z.object({
   id: z.string(),
@@ -27,30 +28,30 @@ const cvSchema = z.object({
   location: z.string().min(1),
   summary: z.string().min(1),
   sections: z.array(sectionSchema),
-});
+})
 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-  const body = await request.json();
-  const parsed = cvSchema.safeParse(body);
+  const { id } = await params
+  const body = await request.json()
+  const parsed = cvSchema.safeParse(body)
 
   if (!parsed.success) {
     return NextResponse.json(
-      { message: "Invalid CV payload", issues: parsed.error.issues },
+      { message: 'Invalid CV payload', issues: parsed.error.issues },
       { status: 400 },
-    );
+    )
   }
 
-  const data = parsed.data;
+  const data = parsed.data
 
   if (data.id !== id) {
     return NextResponse.json(
-      { message: "Path id does not match payload id." },
+      { message: 'Path id does not match payload id.' },
       { status: 400 },
-    );
+    )
   }
 
   const existingCv = await prisma.cv.findUnique({
@@ -63,20 +64,24 @@ export async function PUT(
         },
       },
     },
-  });
+  })
 
   if (!existingCv) {
-    return NextResponse.json({ message: "CV not found." }, { status: 404 });
+    return NextResponse.json({ message: 'CV not found.' }, { status: 404 })
   }
 
-  const ownedSectionIds = new Set(existingCv.sections.map((section) => section.id));
-  const hasInvalidSection = data.sections.some((section) => !ownedSectionIds.has(section.id));
+  const ownedSectionIds = new Set(
+    existingCv.sections.map((section) => section.id),
+  )
+  const hasInvalidSection = data.sections.some(
+    (section) => !ownedSectionIds.has(section.id),
+  )
 
   if (hasInvalidSection) {
     return NextResponse.json(
-      { message: "One or more sections do not belong to this CV." },
+      { message: 'One or more sections do not belong to this CV.' },
       { status: 400 },
-    );
+    )
   }
 
   await prisma.$transaction(async (tx) => {
@@ -90,7 +95,7 @@ export async function PUT(
         location: data.location,
         summary: data.summary,
       },
-    });
+    })
 
     for (const [index, section] of data.sections.entries()) {
       await tx.cvSection.updateMany({
@@ -100,31 +105,33 @@ export async function PUT(
           sortOrder: index,
           items: section.items,
         },
-      });
+      })
     }
-  });
+  })
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true })
 }
 
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
+  const { id } = await params
 
   const existingCv = await prisma.cv.findUnique({
     where: { id },
     select: { id: true },
-  });
+  })
 
   if (!existingCv) {
-    return NextResponse.json({ message: "CV not found." }, { status: 404 });
+    return NextResponse.json({ message: 'CV not found.' }, { status: 404 })
   }
 
   await prisma.cv.delete({
     where: { id },
-  });
+  })
 
-  return NextResponse.json({ ok: true });
+  revalidateTag('cvs', { expire: 0 })
+
+  return NextResponse.json({ ok: true })
 }

@@ -444,7 +444,11 @@ export function CvBuilder({ initialCv }: CvBuilderProps) {
           </div>
 
           <div className='mt-5 flex shrink-0 items-center gap-3 border-t border-(--line) pt-4'>
-            <button onClick={saveCv} type='button' className='save-btn'>
+            <button
+              onClick={saveCv}
+              type='button'
+              className='rounded-full uppercase tracking-[0.12em] bg-(--accent) text-white px-4 py-2 text-xs font-semibold hover:bg-(--accent)/90 disabled:opacity-50'
+            >
               {saveLabel}
             </button>
             {saveState === 'error' && !saveMessage && (

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://cvstudio.app/schemas/cv-import.schema.json",
+  "$id": "https://mycv-studio.steliospnev.dev/schemas/cv-import.schema.json",
   "title": "CV Import Payload",
   "description": "Schema for importing a CV from JSON text or file.",
   "type": "object",
@@ -53,7 +53,13 @@
           },
           "kind": {
             "type": "string",
-            "enum": ["experience", "education", "projects", "skills", "languages"]
+            "enum": [
+              "experience",
+              "education",
+              "projects",
+              "skills",
+              "languages"
+            ]
           },
           "items": {
             "type": "array",

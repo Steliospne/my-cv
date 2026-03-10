@@ -12,6 +12,11 @@ type CvBuilderProps = {
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 
+type HeaderFields = keyof Pick<
+  CvDocument,
+  'fullName' | 'headline' | 'email' | 'phone' | 'location' | 'summary'
+>
+
 const createItem = () => ({
   id: crypto.randomUUID(),
   title: '',
@@ -79,18 +84,11 @@ export function CvBuilder({ initialCv }: CvBuilderProps) {
     })
   }
 
-  const updateHeader =
-    (
-      field: keyof Pick<
-        CvDocument,
-        'fullName' | 'headline' | 'email' | 'phone' | 'location' | 'summary'
-      >,
-    ) =>
-    (value: string) => {
-      setSaveState('idle')
-      setSaveMessage(null)
-      setCv((prev) => ({ ...prev, [field]: value }))
-    }
+  const updateHeader = (field: HeaderFields) => (value: string) => {
+    setSaveState('idle')
+    setSaveMessage(null)
+    setCv((prev) => ({ ...prev, [field]: value }))
+  }
 
   const updateItem = (
     sectionId: string,

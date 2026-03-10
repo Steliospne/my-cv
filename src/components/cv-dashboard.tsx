@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, type ChangeEvent } from 'react'
+import { useState, useTransition, type ChangeEvent } from 'react'
 import type { CvListItem } from '@/lib/cv-types'
 import { createCv } from '@/lib/cv-actions'
 import { Spinner } from '@/components/ui/spinner'
@@ -13,12 +13,12 @@ type CvDashboardProps = {
 
 export function CvDashboard({ cvs }: CvDashboardProps) {
   const router = useRouter()
+  const [isCreating, startTransition] = useTransition()
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [importText, setImportText] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
   const [isImporting, setIsImporting] = useState(false)
   const [showImportPanel, setShowImportPanel] = useState(false)
-  const [isCreating, setIsCreating] = useState(false)
 
   const deleteCv = async (cvId: string, fullName: string) => {
     const shouldDelete = window.confirm(
@@ -128,11 +128,10 @@ export function CvDashboard({ cvs }: CvDashboardProps) {
     }
   }
 
-  async function createCvAction() {
-    setIsCreating(true)
-    const created = await createCv()
-    setIsCreating(false)
-    router.push(`/cv/${created.id}`)
+  const createCvAction = () => {
+    startTransition(async () => {
+      await createCv()
+    })
   }
 
   return (

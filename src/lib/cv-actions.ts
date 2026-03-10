@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import type { CvDocument, CvItem, CvListItem, CvSection } from '@/lib/cv-types'
 import type { CvImportPayload } from '@/lib/cv-data'
 import { cacheTag, updateTag } from 'next/cache'
+import { redirect } from 'next/navigation'
 
 const createItem = (
   title: string,
@@ -273,7 +274,7 @@ export async function createCv(): Promise<CvDocument> {
   })
 
   updateTag('cvs')
-  return toCvDocument(created)
+  redirect(`/cv/${created.id}`)
 }
 
 export async function createCvFromImport(

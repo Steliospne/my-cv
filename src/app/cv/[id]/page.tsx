@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CvBuilder } from '@/components/cv-builder'
 import { serializeCv } from '@/lib/cv-actions'
+import { Suspense } from 'react'
 
 type CvPageProps = {
   params: Promise<{ id: string }>
@@ -27,7 +28,9 @@ export default async function CvPage({ params }: CvPageProps) {
           </Link>
         </div>
         <div className='min-h-0 flex-1'>
-          <CvBuilder initialCv={cv} />
+          <Suspense fallback={<div>Loading...</div>}>
+            <CvBuilder initialCv={cv} />
+          </Suspense>
         </div>
       </div>
     </main>

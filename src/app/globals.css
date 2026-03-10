@@ -202,6 +202,35 @@ body {
   border-radius: 999px;
 }
 
+/* Global loading indicator — thin bar with moving accent */
+.loading-bar {
+  width: 6rem;
+  height: 2px;
+  background: var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.loading-bar::after {
+  content: '';
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  animation: loading-bar-shuttle 1.2s ease-in-out infinite;
+}
+
+@keyframes loading-bar-shuttle {
+  0%,
+  100% {
+    transform: translateX(-120%);
+  }
+  50% {
+    transform: translateX(320%);
+  }
+}
+
 @media (max-width: 1380px) {
   .a4-sheet {
     width: 100%;

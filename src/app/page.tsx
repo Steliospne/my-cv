@@ -1,16 +1,8 @@
-import { redirect } from 'next/navigation'
 import { CvDashboard } from '@/components/cv-dashboard'
-import { createCv, listCvs } from '@/lib/cv-data'
+import { listCvs } from '@/lib/cv-actions'
 
 export default async function Home() {
   const cvs = await listCvs()
-
-  async function createCvAction() {
-    'use server'
-
-    const created = await createCv()
-    redirect(`/cv/${created.id}`)
-  }
 
   return (
     <main className='min-h-screen px-6 py-8 md:px-10'>
@@ -27,11 +19,6 @@ export default async function Home() {
               Select any saved CV to continue editing.
             </p>
           </div>
-          <form action={createCvAction}>
-            <button type='submit' className='save-btn'>
-              Create New CV
-            </button>
-          </form>
         </header>
 
         <CvDashboard cvs={cvs} />

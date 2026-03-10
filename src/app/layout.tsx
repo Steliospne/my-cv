@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { Source_Sans_3, Spectral } from "next/font/google";
+import { Source_Sans_3, Spectral, Inter } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
+const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 const sourceSans = Source_Sans_3({
   variable: "--font-source-sans",
@@ -24,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={cn("font-sans", inter.variable)}>
       <body className={`${sourceSans.variable} ${spectral.variable} antialiased`}>
         {children}
       </body>

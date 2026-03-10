@@ -1,6 +1,6 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 import { CvPdfDocument } from "@/lib/cv-pdf";
-import { serializeCv } from "@/lib/cv-data";
+import { serializeCv } from "@/lib/cv-actions";
 import type { DocumentProps } from "@react-pdf/renderer";
 import type { ReactElement } from "react";
 

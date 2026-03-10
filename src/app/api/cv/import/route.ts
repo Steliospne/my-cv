@@ -1,6 +1,6 @@
 import Ajv2020 from "ajv/dist/2020";
 import { NextResponse } from "next/server";
-import { createCvFromImport } from "@/lib/cv-data";
+import { createCvFromImport } from "@/lib/cv-actions";
 import type { CvImportPayload } from "@/lib/cv-data";
 import cvImportSchema from "@/lib/schemas/cv-import.schema.json";
 

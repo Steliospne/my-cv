@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, type ChangeEvent } from 'react'
 import type { CvListItem } from '@/lib/cv-types'
+import { createCv } from '@/lib/cv-actions'
 
 type CvDashboardProps = {
   cvs: CvListItem[]
@@ -16,6 +17,7 @@ export function CvDashboard({ cvs }: CvDashboardProps) {
   const [importError, setImportError] = useState<string | null>(null)
   const [isImporting, setIsImporting] = useState(false)
   const [showImportPanel, setShowImportPanel] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
 
   const deleteCv = async (cvId: string, fullName: string) => {
     const shouldDelete = window.confirm(
@@ -51,13 +53,11 @@ export function CvDashboard({ cvs }: CvDashboardProps) {
         body: JSON.stringify(payload),
       })
 
-      const data = (await response.json().catch(() => null)) as
-        | {
-            id?: string
-            message?: string
-            issues?: Array<{ instancePath?: string; message?: string }>
-          }
-        | null
+      const data = (await response.json().catch(() => null)) as {
+        id?: string
+        message?: string
+        issues?: Array<{ instancePath?: string; message?: string }>
+      } | null
 
       if (!response.ok || !data?.id) {
         const firstIssue = data?.issues?.[0]
@@ -123,9 +123,24 @@ export function CvDashboard({ cvs }: CvDashboardProps) {
     }
   }
 
+  async function createCvAction() {
+    setIsCreating(true)
+    const created = await createCv()
+    setIsCreating(false)
+    router.push(`/cv/${created.id}`)
+  }
+
   return (
     <>
-      <div className='mb-5 flex items-center justify-end'>
+      <div className='mb-5 flex items-center justify-end gap-4'>
+        <form action={createCvAction}>
+          <button
+            type='submit'
+            className='rounded-full uppercase tracking-[0.12em] bg-(--accent) text-white px-4 py-2 text-xs font-semibold hover:bg-(--accent)/90'
+          >
+            Create New CV
+          </button>
+        </form>
         <button
           type='button'
           onClick={() => setShowImportPanel((prev) => !prev)}
@@ -137,9 +152,12 @@ export function CvDashboard({ cvs }: CvDashboardProps) {
 
       {showImportPanel ? (
         <section className='mb-6 rounded-3xl border border-(--line) bg-(--panel) p-5 shadow-(--card-shadow)'>
-          <h3 className='font-heading text-2xl text-(--ink)'>Import CV from JSON</h3>
+          <h3 className='font-heading text-2xl text-(--ink)'>
+            Import CV from JSON
+          </h3>
           <p className='mt-2 text-sm text-(--muted-strong)'>
-            Paste JSON text or upload a <code>.json</code> file. The payload is validated against a Draft 2020-12 schema.
+            Paste JSON text or upload a <code>.json</code> file. The payload is
+            validated against a Draft 2020-12 schema.
           </p>
 
           <div className='mt-4 flex flex-wrap gap-3'>
@@ -170,7 +188,9 @@ export function CvDashboard({ cvs }: CvDashboardProps) {
           />
 
           {importError ? (
-            <p className='mt-3 text-sm text-rose-700'>Import error: {importError}</p>
+            <p className='mt-3 text-sm text-rose-700'>
+              Import error: {importError}
+            </p>
           ) : null}
         </section>
       ) : null}

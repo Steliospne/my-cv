@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CvBuilder } from '@/components/cv-builder'
-import { serializeCv } from '@/lib/cv-data'
+import { serializeCv } from '@/lib/cv-actions'
 
 type CvPageProps = {
   params: Promise<{ id: string }>

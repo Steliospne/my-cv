@@ -24,6 +24,8 @@ export type CvDocument = {
   phone: string;
   location: string;
   summary: string;
+  githubUrl: string;
+  linkedinUrl: string;
   sections: CvSection[];
 };
 

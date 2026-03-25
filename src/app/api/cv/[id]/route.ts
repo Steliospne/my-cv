@@ -27,6 +27,8 @@ const cvSchema = z.object({
   phone: z.string().min(1),
   location: z.string().min(1),
   summary: z.string().min(1),
+  githubUrl: z.string(),
+  linkedinUrl: z.string(),
   sections: z.array(sectionSchema),
 })
 
@@ -94,6 +96,8 @@ export async function PUT(
         phone: data.phone,
         location: data.location,
         summary: data.summary,
+        githubUrl: data.githubUrl,
+        linkedinUrl: data.linkedinUrl,
       },
     })
 

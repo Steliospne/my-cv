@@ -7,6 +7,8 @@ export type CvImportPayload = {
   phone: string
   location: string
   summary: string
+  githubUrl?: string
+  linkedinUrl?: string
   sections: Array<{
     title: string
     kind: CvSection['kind']

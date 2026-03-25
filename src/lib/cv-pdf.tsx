@@ -113,7 +113,7 @@ const shouldRenderSection = (section: CvDocument["sections"][number]) => {
   return section.items.some((item) => !isItemEmpty(item));
 };
 
-export function CvPdfDocument({ cv }: { cv: CvDocument }) {
+export function CvPdfDocument({ cv }: Readonly<{ cv: CvDocument }>) {
   return (
     <Document title={`${cv.fullName} - CV`} language="en">
       <Page size="A4" style={styles.page}>
@@ -123,6 +123,13 @@ export function CvPdfDocument({ cv }: { cv: CvDocument }) {
           <Text style={styles.contact}>
             {cv.email} | {cv.phone} | {cv.location}
           </Text>
+          {cv.githubUrl.trim() || cv.linkedinUrl.trim() ? (
+            <Text style={styles.contact}>
+              {cv.githubUrl.trim() ? `GitHub: ${cv.githubUrl.trim()}` : ""}
+              {cv.githubUrl.trim() && cv.linkedinUrl.trim() ? " | " : ""}
+              {cv.linkedinUrl.trim() ? `LinkedIn: ${cv.linkedinUrl.trim()}` : ""}
+            </Text>
+          ) : null}
         </View>
 
         <View style={styles.section}>

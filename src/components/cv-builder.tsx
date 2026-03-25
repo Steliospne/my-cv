@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import type { CvDocument } from '@/lib/cv-types'
 import { CvPreview } from '@/components/cv-preview'
 import { formatFilename } from '@/lib/utils/format-filename'
@@ -14,7 +14,14 @@ type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 
 type HeaderFields = keyof Pick<
   CvDocument,
-  'fullName' | 'headline' | 'email' | 'phone' | 'location' | 'summary'
+  | 'fullName'
+  | 'headline'
+  | 'email'
+  | 'phone'
+  | 'location'
+  | 'summary'
+  | 'githubUrl'
+  | 'linkedinUrl'
 >
 
 const createItem = () => ({
@@ -31,7 +38,7 @@ const autoResizeTextarea = (element: HTMLTextAreaElement | null) => {
   element.style.height = `${element.scrollHeight}px`
 }
 
-export function CvBuilder({ initialCv }: CvBuilderProps) {
+export function CvBuilder({ initialCv }: Readonly<CvBuilderProps>) {
   const [cv, setCv] = useState<CvDocument>(initialCv)
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
@@ -40,6 +47,12 @@ export function CvBuilder({ initialCv }: CvBuilderProps) {
   )
   const [isPending, startTransition] = useTransition()
 
+  const cvRef = useRef(cv)
+  cvRef.current = cv
+
+  const isSavingRef = useRef(false)
+  const lastPersistedSnapshot = useRef(JSON.stringify(initialCv))
+
   const saveLabel = useMemo(() => {
     if (saveState === 'saving' || isPending) return 'Saving...'
     if (saveState === 'saved') return 'Saved'
@@ -47,13 +60,13 @@ export function CvBuilder({ initialCv }: CvBuilderProps) {
     return 'Save changes'
   }, [isPending, saveState])
 
-  const persistCv = async (): Promise<boolean> => {
-    const response = await fetch(`/api/cv/${cv.id}`, {
+  const persistCv = async (document: CvDocument): Promise<boolean> => {
+    const response = await fetch(`/api/cv/${document.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(cv),
+      body: JSON.stringify(document),
     })
 
     if (!response.ok) {
@@ -75,14 +88,40 @@ export function CvBuilder({ initialCv }: CvBuilderProps) {
     return true
   }
 
-  const saveCv = () => {
+  const persistCvRef = useRef(persistCv)
+  persistCvRef.current = persistCv
+
+  const executeSave = useCallback(() => {
+    if (isSavingRef.current) return
+    isSavingRef.current = true
     setSaveState('saving')
     setSaveMessage(null)
     startTransition(async () => {
-      const ok = await persistCv()
-      setSaveState(ok ? 'saved' : 'error')
+      try {
+        const doc = cvRef.current
+        const ok = await persistCvRef.current(doc)
+        if (ok) {
+          lastPersistedSnapshot.current = JSON.stringify(doc)
+        }
+        setSaveState(ok ? 'saved' : 'error')
+      } finally {
+        isSavingRef.current = false
+      }
     })
+  }, [startTransition])
+
+  const saveCv = () => {
+    executeSave()
   }
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      if (isSavingRef.current) return
+      if (JSON.stringify(cvRef.current) === lastPersistedSnapshot.current) return
+      executeSave()
+    }, 60_000)
+    return () => window.clearInterval(intervalId)
+  }, [executeSave])
 
   const updateHeader = (field: HeaderFields) => (value: string) => {
     setSaveState('idle')
@@ -173,7 +212,8 @@ export function CvBuilder({ initialCv }: CvBuilderProps) {
     setSaveMessage(null)
 
     try {
-      const didSave = await persistCv()
+      const doc = cvRef.current
+      const didSave = await persistCv(doc)
       if (!didSave) {
         setSaveState('error')
         setPdfState('error')
@@ -181,7 +221,8 @@ export function CvBuilder({ initialCv }: CvBuilderProps) {
       }
 
       setSaveState('saved')
-      const response = await fetch(`/cv/${cv.id}/pdf`)
+      lastPersistedSnapshot.current = JSON.stringify(doc)
+      const response = await fetch(`/cv/${doc.id}/pdf`)
       if (!response.ok) {
         throw new Error('Failed to generate PDF')
       }
@@ -189,9 +230,9 @@ export function CvBuilder({ initialCv }: CvBuilderProps) {
       const blob = await response.blob()
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
-      const cvFullname = formatFilename(cv.fullName, 'cv')
+      const cvFullname = formatFilename(doc.fullName, 'cv')
       const cvHeadline = formatFilename(
-        cv.headline,
+        doc.headline,
         generateRandomString({ length: 8, mode: 'numeric' }),
       )
       const filename = `${cvFullname}-${cvHeadline}.pdf`
@@ -207,7 +248,7 @@ export function CvBuilder({ initialCv }: CvBuilderProps) {
 
       if (window.confirm('PDF downloaded. Do you want to preview it now?')) {
         window.open(
-          `/cv/${cv.id}/pdf?preview=1`,
+          `/cv/${doc.id}/pdf?preview=1`,
           '_blank',
           'noopener,noreferrer',
         )
@@ -238,6 +279,31 @@ export function CvBuilder({ initialCv }: CvBuilderProps) {
             >
               {pdfState === 'downloading' ? 'Downloading...' : 'Download PDF'}
             </button>
+          </div>
+
+          <div className='mb-4 shrink-0 space-y-3'>
+            <label className='form-label'>
+              GitHub link
+              <input
+                className='form-input'
+                value={cv.githubUrl}
+                onChange={(event) =>
+                  updateHeader('githubUrl')(event.target.value)
+                }
+                placeholder='https://github.com/username'
+              />
+            </label>
+            <label className='form-label'>
+              LinkedIn link
+              <input
+                className='form-input'
+                value={cv.linkedinUrl}
+                onChange={(event) =>
+                  updateHeader('linkedinUrl')(event.target.value)
+                }
+                placeholder='https://www.linkedin.com/in/username'
+              />
+            </label>
           </div>
 
           <div className='scroll-panel min-h-0 flex-1 overflow-y-auto pr-2'>

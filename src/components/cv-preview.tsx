@@ -20,6 +20,12 @@ const isItemEmpty = (item: {
     (field) => field.trim().length === 0,
   )
 
+const profileHref = (url: string) => {
+  const t = url.trim()
+  if (!t) return ''
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`
+}
+
 const shouldRenderSection = (section: CvDocument['sections'][number]) => {
   if (section.kind !== 'projects') {
     return true
@@ -28,7 +34,7 @@ const shouldRenderSection = (section: CvDocument['sections'][number]) => {
   return section.items.some((item) => !isItemEmpty(item))
 }
 
-export function CvPreview({ cv }: CvPreviewProps) {
+export function CvPreview({ cv }: Readonly<CvPreviewProps>) {
   return (
     <section className='a4-sheet mx-auto'>
       <header className='border-b border-(--line) pb-6'>
@@ -39,6 +45,33 @@ export function CvPreview({ cv }: CvPreviewProps) {
         <p className='mt-3 text-sm text-(--muted)'>
           {cv.email} | {cv.phone} | {cv.location}
         </p>
+        {(cv.githubUrl.trim() || cv.linkedinUrl.trim()) && (
+          <p className='mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm text-(--muted)'>
+            {cv.githubUrl.trim() ? (
+              <a
+                href={profileHref(cv.githubUrl)}
+                target='_blank'
+                rel='noreferrer noopener'
+                className='text-(--accent) underline-offset-2 hover:underline'
+              >
+                GitHub
+              </a>
+            ) : null}
+            {cv.githubUrl.trim() && cv.linkedinUrl.trim() ? (
+              <span aria-hidden='true'>|</span>
+            ) : null}
+            {cv.linkedinUrl.trim() ? (
+              <a
+                href={profileHref(cv.linkedinUrl)}
+                target='_blank'
+                rel='noreferrer noopener'
+                className='text-(--accent) underline-offset-2 hover:underline'
+              >
+                LinkedIn
+              </a>
+            ) : null}
+          </p>
+        )}
       </header>
 
       <section className='mt-6'>

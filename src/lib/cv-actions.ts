@@ -134,6 +134,8 @@ const toCvDocument = (cv: {
   phone: string
   location: string
   summary: string
+  githubUrl: string
+  linkedinUrl: string
   sections: Array<{
     id: string
     title: string
@@ -149,6 +151,8 @@ const toCvDocument = (cv: {
   phone: cv.phone,
   location: cv.location,
   summary: cv.summary,
+  githubUrl: cv.githubUrl ?? '',
+  linkedinUrl: cv.linkedinUrl ?? '',
   sections: cv.sections.map((section) => ({
     id: section.id,
     title: section.title,
@@ -255,6 +259,8 @@ export async function createCv(): Promise<CvDocument> {
       phone: '+00 000000000',
       location: 'City, Country',
       summary: 'Write a concise professional summary.',
+      githubUrl: '',
+      linkedinUrl: '',
       sections: {
         create: initialSections().map((section) => ({
           title: section.title,
@@ -288,6 +294,8 @@ export async function createCvFromImport(
       phone: payload.phone.trim(),
       location: payload.location.trim(),
       summary: payload.summary.trim(),
+      githubUrl: payload.githubUrl?.trim() ?? '',
+      linkedinUrl: payload.linkedinUrl?.trim() ?? '',
       sections: {
         create: payload.sections.map((section, index) => ({
           title: section.title.trim(),
